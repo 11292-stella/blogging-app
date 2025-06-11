@@ -22,7 +22,7 @@ public class AuthorController {
     private AuthorService AuthorService;
 
     @PostMapping("")
-    public Author creaAuthor(@RequestBody AuthorDto authorDto) throws ChangeSetPersister.NotFoundException {
+    public Author creaAuthor(@RequestBody AuthorDto authorDto) throws ChangeSetPersister.NotFoundException, BlogPostNotFoundException {
         return AuthorService.saveAuthor(authorDto);
     }
 
@@ -39,8 +39,8 @@ public class AuthorController {
     }
 
     @PutMapping("/{id}")
-    public Author updateAuthor(@PathVariable int id,@RequestBody Author author)throws AuthorNotFoundException{
-        return AuthorService.updateAuthor(id,author);
+    public Author updateAuthor(@PathVariable int id,@RequestBody AuthorDto authorDto) throws AuthorNotFoundException, BlogPostNotFoundException {
+        return AuthorService.updateAuthor(id,authorDto);
     }
 
     @DeleteMapping("/{id}")

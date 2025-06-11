@@ -20,7 +20,7 @@ public class Author {
 
 
     @ManyToOne
-    @JoinColumn(name = "BlogPost_id")
+    @JoinColumn(name = "blog_post_id")
     private BlogPost blogPost;
 
 }
