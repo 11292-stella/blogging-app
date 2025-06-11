@@ -1,7 +1,9 @@
 package com.example.blogging_app.service;
 
+import com.example.blogging_app.Repository.BlogPostRepository;
 import com.example.blogging_app.model.BlogPost;
 import exception.BlogPostNotFoundException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -9,38 +11,39 @@ import java.util.List;
 import java.util.Random;
 
 @Service
+
 public class BlogPostService {
 
-    private List<BlogPost> posts = new ArrayList<>();
+    @Autowired
+    private BlogPostRepository blogPostRepository;
 
-    public BlogPost saveBlogPost(BlogPost post){
-        post.setId(new Random().nextInt(1,2000));
-        posts.add(post);
-        return post;
+    public BlogPost saveBlogPost(BlogPost post) {
+        return blogPostRepository.save(post);
     }
 
-    public BlogPost getBlogPost(int id) throws BlogPostNotFoundException{
-        return posts.stream().filter(blogPost -> blogPost.getId() == id)
-                .findFirst().orElseThrow(() -> new BlogPostNotFoundException("il blogPost non esiste" + id));
+    public BlogPost getBlogPost(int id) throws BlogPostNotFoundException {
+        return blogPostRepository.findById(id)
+                .orElseThrow(() -> new BlogPostNotFoundException("Il blogPost non esiste con ID: " + id));
     }
 
-    public List<BlogPost> getAllBlogPost(){
-        return posts;
+    public List<BlogPost> getAllBlogPost() {
+        return blogPostRepository.findAll();
     }
 
-    public BlogPost updateBlogPost(int id,BlogPost post)throws BlogPostNotFoundException{
-        BlogPost postDaCercare= getBlogPost(id);
+    public BlogPost updateBlogPost(int id, BlogPost post) throws BlogPostNotFoundException {
+        BlogPost postDaAggiornare = getBlogPost(id);
 
-        postDaCercare.setContenuto(post.getContenuto());
-        postDaCercare.setCategoria(post.getCategoria());
-        postDaCercare.setTitolo(post.getTitolo());
-        postDaCercare.setTempoDiLettura(post.getTempoDiLettura());
-        postDaCercare.setCover(post.getCover());
-        return postDaCercare;
+        postDaAggiornare.setContenuto(post.getContenuto());
+        postDaAggiornare.setCategoria(post.getCategoria());
+        postDaAggiornare.setTitolo(post.getTitolo());
+        postDaAggiornare.setTempoDiLettura(post.getTempoDiLettura());
+        postDaAggiornare.setCover(post.getCover());
+
+        return blogPostRepository.save(postDaAggiornare);
     }
 
-    public void deleteBlogPost(int id)throws BlogPostNotFoundException{
+    public void deleteBlogPost(int id) throws BlogPostNotFoundException {
         BlogPost blogPostDaRimuovere = getBlogPost(id);
-        posts.remove(blogPostDaRimuovere);
+        blogPostRepository.delete(blogPostDaRimuovere);
     }
 }

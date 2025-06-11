@@ -1,7 +1,17 @@
 package com.example.blogging_app.service;
 
+import com.example.blogging_app.Repository.AuthorRepository;
+import com.example.blogging_app.dto.AuthorDto;
 import com.example.blogging_app.model.Author;
+import com.example.blogging_app.model.BlogPost;
 import exception.AuthorNotFoundException;
+import exception.BlogPostNotFoundException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.crossstore.ChangeSetPersister;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -11,38 +21,55 @@ import java.util.Random;
 @Service
 public class AuthorService {
 
-    private List<Author> autori = new ArrayList<>();
+    @Autowired
+    private AuthorRepository authorRepository;
 
-    public Author saveAuthor(Author autore){
+    @Autowired
+    private BlogPostService blogPostService;
 
-        autore.setId(new Random().nextInt(1,2000));
+    public Author saveAuthor(AuthorDto autoreDto) throws BlogPostNotFoundException {
+        BlogPost blogPost = blogPostService.getBlogPost(autoreDto.getBlogPostId());
 
-        autori.add(autore);
-        return autore;
+        Author author = new Author();
+        author.setNome(autoreDto.getNome());
+        author.setCognome(autoreDto.getCognome());
+        author.setEmail(autoreDto.getEmail());
+        author.setAvatar(autoreDto.getAvatar());
+        author.setDataNascita(autoreDto.getDataNascita());
+        author.setBlogPost(blogPost);
+
+        return authorRepository.save(author);
     }
 
-    public Author getAutore(int id)  throws AuthorNotFoundException {
-        return autori.stream().filter(autore -> autore.getId() == id )
-                .findFirst().orElseThrow(() -> new AuthorNotFoundException("autore non trovato" + id));
+    public Author getAutore(int id) throws AuthorNotFoundException {
+        return authorRepository.findById(id)
+                .orElseThrow(() -> new AuthorNotFoundException("Autore non trovato con ID: " + id));
     }
 
-    public List<Author> getAllAuthor(){
-        return autori;
+    public Page<Author> getAllAuthor(int page, int size, String sortBy) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortBy));
+        return authorRepository.findAll(pageable);
     }
 
-    public Author updateAuthor(int id,Author autore) throws AuthorNotFoundException{
+    public Author updateAuthor(int id, AuthorDto autoreDto) throws AuthorNotFoundException, BlogPostNotFoundException {
         Author autoreDaCercare = getAutore(id);
 
-        autoreDaCercare.setNome(autore.getNome());
-        autoreDaCercare.setCognome(autore.getCognome());
-        autoreDaCercare.setEmail(autore.getEmail());
-        autoreDaCercare.setAvatar(autoreDaCercare.getAvatar());
-        autoreDaCercare.setDataNascita(autore.getDataNascita());
-        return autoreDaCercare;
+        autoreDaCercare.setNome(autoreDto.getNome());
+        autoreDaCercare.setCognome(autoreDto.getCognome());
+        autoreDaCercare.setEmail(autoreDto.getEmail());
+        autoreDaCercare.setAvatar(autoreDto.getAvatar());
+        autoreDaCercare.setDataNascita(autoreDto.getDataNascita());
+
+        if (autoreDaCercare.getBlogPost().getId() != autoreDto.getBlogPostId()) {
+            BlogPost blogPost = blogPostService.getBlogPost(autoreDto.getBlogPostId());
+            autoreDaCercare.setBlogPost(blogPost);
+        }
+
+        return authorRepository.save(autoreDaCercare);
     }
 
-    public void deleteAutore(int id)throws AuthorNotFoundException{
+    public void deleteAutore(int id) throws AuthorNotFoundException {
         Author autoreDaRimuovere = getAutore(id);
-        autori.remove(autoreDaRimuovere);
+        authorRepository.delete(autoreDaRimuovere);
     }
 }
